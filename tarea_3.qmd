@@ -1,0 +1,123 @@
+---
+title: "tarea 3-jessica jeanette espinosa martinez"
+format: html
+editor: visual
+---
+
+```{python}
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+
+```
+
+**Empezamos datos**
+```{python}
+# Simulamos datos (reemplaza esto con tus datos reales)
+np.random.seed(42)
+gasto_salud = np.linspace(1000, 10000, 50)  # gasto público en salud
+# Supongamos que esperanza de vida depende linealmente del gasto con ruido
+esperanza_vida = 60 + 0.005 * gasto_salud + np.random.normal(0, 1.5, 50)
+```
+
+```{python}
+# Crear DataFrame
+df = pd.DataFrame({
+    'gasto_salud': gasto_salud,
+    'esperanza_vida': esperanza_vida
+})
+
+# Variables independientes y dependiente
+X = df[['gasto_salud']]  # debe ser 2D para sklearn
+y = df['esperanza_vida']
+
+```
+
+**Crear regresion**
+```{python}
+
+# Crear y entrenar modelo de regresión lineal
+modelo = LinearRegression()
+modelo.fit(X, y)
+
+# Coeficientes
+pendiente = modelo.coef_[0]
+intercepto = modelo.intercept_
+print(f'Pendiente: {pendiente:.5f}')
+print(f'Intersección: {intercepto:.2f}')
+
+# Predicciones
+y_pred = modelo.predict(X)
+
+# Graficar resultados
+plt.figure(figsize=(8,6))
+plt.scatter(X, y, color='blue', label='Datos reales')
+plt.plot(X, y_pred, color='red', label='Regresión lineal')
+plt.xlabel('Gasto en salud (millones)')
+plt.ylabel('Esperanza de vida (años)')
+plt.title('Regresión lineal del sector salud (datos simulados)')
+plt.legend()
+plt.grid(True)
+plt.show()
+```
+
+**Comparacion PIB**
+```{python}
+import matplotlib.pyplot as plt
+
+# Datos
+categorias = ['Gasto en Salud Pública', 'Ingresos del Gobierno Federal']
+valores = [85845.7, 27.0]  # Valores en millones de pesos y porcentaje del PIB
+
+# Crear gráfico de barras
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.bar(categorias, valores, color=['blue', 'green'])
+
+# Etiquetas y título
+ax.set_ylabel('Millones de pesos / Porcentaje del PIB')
+ax.set_title('Comparativa: Gasto en Salud Pública vs. Ingresos del Gobierno Federal en 2024')
+
+# Mostrar gráfico
+plt.show()
+```
+
+**Expectativas 2025**
+```{python}
+# Datos simulados
+np.random.seed(42)
+gasto_salud = np.linspace(1000, 10000, 50)  # Gasto público en salud
+esperanza_vida = 60 + 0.005 * gasto_salud + np.random.normal(0, 1.5, 50)  # Esperanza de vida
+
+# Crear DataFrame
+df = pd.DataFrame({'Gasto en Salud': gasto_salud, 'Esperanza de Vida': esperanza_vida})
+
+# Variables independientes y dependiente
+X = df[['Gasto en Salud']]  # Debe ser 2D para sklearn
+y = df['Esperanza de Vida']
+
+# Crear y entrenar el modelo de regresión lineal
+modelo = LinearRegression()
+modelo.fit(X, y)
+
+# Coeficientes
+pendiente = modelo.coef_[0]
+intercepto = modelo.intercept_
+print(f'Pendiente: {pendiente:.5f}')
+print(f'Intersección: {intercepto:.2f}')
+
+# Predicciones
+y_pred = modelo.predict(X)
+
+# Graficar resultados
+plt.figure(figsize=(8, 6))
+plt.scatter(X, y, color='blue', label='Datos reales')
+plt.plot(X, y_pred, color='red', label='Regresión lineal')
+plt.xlabel('Gasto en Salud (millones de pesos)')
+plt.ylabel('Esperanza de Vida (años)')
+plt.title('Regresión lineal: Gasto en Salud vs Esperanza de Vida')
+plt.legend()
+plt.grid(True)
+plt.show()
+```
+

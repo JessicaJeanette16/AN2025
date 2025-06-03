@@ -1,0 +1,652 @@
+---
+title: "Tarea 5. Diferenciación e integración numérica."
+author: "Jessica Espinosa"
+format: 
+  html:
+    grid: 
+      body-width: 1000px
+editor: visual
+jupyter: python3
+---
+
+Importamos packages y funciones necesarias:
+
+```{python}
+#| code-fold: true
+
+import matplotlib.pyplot as plt
+import numpy as np
+import math
+from scipy.interpolate import lagrange
+from numpy.polynomial.polynomial import Polynomial
+from scipy.interpolate import CubicSpline
+
+import plotly.graph_objects as go
+from scipy.differentiate import derivative
+import numdifftools as nd
+from scipy.stats import norm
+from scipy import integrate
+
+```
+
+# Ejercicio 1.
+
+Para cada una de las siguientes funciones:
+
+-   Realiza la respectiva gráfica en el intervalo dado.
+
+-   Compara las gráficas de las derivadas aproximadas de la función `derivative` de `Scipy`, con dos tamaños de paso utilizando la función `nd.Derivative` y la derivada *exacta* en tal intervalo.
+
+-   Compara las gráficas de las segundas derivadas aproximadas con dos tamaños de paso utilizando la función `nd.Derivative` y la segunda derivada *exacta* en tal intervalo.
+
+-   Realiza las gráficas de los errores absolutos en cada caso.
+
+a)  $f(x)=e^{2x}-cos 2x$, $x\in [0,2]$
+
+```{python}
+#Realizamos la grafica del ejemplo 9 
+#| code-fold: true
+#| fig-align: 'center'
+
+f= lambda x: np.exp(2*x)-np.cos(2*x)
+derf = lambda x: 2*np.exp(2*x)+2*np.sin(2*x)
+
+x_values = np.linspace(0, 2, 100)
+
+plt.figure(figsize=(8,6))
+plt.plot(x_values,  f(x_values))
+
+plt.grid()
+
+plt.show()
+```
+
+#Instruccion b)
+
+```{python}
+#| code-fold: true
+#| fig-align: 'center' #Se aproxima la derivada de scipty linea 75.
+
+# Función de numdifftools #podemo cambiar los 0.1 y 0.25 ya que la derivada esta en el punto de 0 a 2 
+df_01 = nd.Derivative(f, step=0.1, method='central', order=2)
+df_025 = nd.Derivative(f, step=0.25, method='central', order=2)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x= x_values, y= derf(x_values), mode='lines', name='Derivada', line=dict(color='red', width=3)))
+fig.add_trace(go.Scatter(x= x_values, y= df_01(x_values), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= df_025(x_values), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+
+fig.add_trace(go.Scatter(x= x_values, y= derivative(f, x_values).df, mode='lines', name='SciPy', line=dict(color='aqua', width=2)))
+
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de aproximación de las derivadas",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+```
+
+#GRafica de error comparando
+
+```{python}
+#| code-fold: true
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatter(x= x_values, y= abs(derf(x_values)-df_025(x_values)), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= abs(derf(x_values)-df_01(x_values)), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+
+fig.add_trace(go.Scatter(x= x_values, y= abs(derf(x_values)-derivative(f, x_values).df), mode='lines', name='SciPy', line=dict(color='aqua', width=2)))
+
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de errores",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+```
+
+#Instruccion c) 2da. derivada
+
+```{python}
+#| code-fold: true
+
+
+dderf = lambda x: 4*np.exp(2*x)+4*np.cos(2*x)
+
+a = 0 
+b= 2
+
+ddf_01 = nd.Derivative(f, step=0.1, method='central', order=2, n = 2) #el valor de n igual a 2 es la segunda derivada para poder compararla
+ddf_025 = nd.Derivative(f, step=0.25, method='central', order=2, n = 2)
+fig = go.Figure()
+
+x_values = np.linspace(a, b, 500)
+
+fig.add_trace(go.Scatter(x= x_values, y= ddf_025(x_values), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= ddf_01(x_values), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= dderf(x_values), mode='lines', name='2da. derivada', line=dict(color='goldenrod', width=1)))
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de aproximación de la 2da derivada",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+
+```
+
+#Errores de la 2da derivada.
+
+```{python}
+#| code-fold: true
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatter(x= x_values, y= abs(dderf(x_values)-ddf_025(x_values)), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= abs(dderf(x_values)-ddf_01(x_values)), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de errores 2da. derivada",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+```
+
+b)  $f(x)=log(x+2)-(x+1)^2$, $x\in [0,5]$ #CAmbiamos extremos del intervalos, la funcion,
+
+```{python}
+#Realizamos la grafica del ejemplo 9 
+#| code-fold: true
+#| fig-align: 'center'
+
+f= lambda x: np.log(x+2)-(x+1)**2
+derf = lambda x: 1/(x+2)-2*(x+1)
+
+x_values = np.linspace(0, 5, 100) #es el numero de puntos, ya que es decreciente en este intervalo
+
+plt.figure(figsize=(8,6))
+plt.plot(x_values,  f(x_values))
+
+plt.grid()
+
+plt.show()
+```
+
+#Instruccion b)
+
+```{python}
+#| code-fold: true
+#| fig-align: 'center' #Se aproxima la derivada de scipty linea 75.
+
+# Función de numdifftools #podemo cambiar los 0.1 y 0.25 ya que la derivada esta en el punto de 0 a 2 
+df_01 = nd.Derivative(f, step=0.1, method='central', order=2)
+df_025 = nd.Derivative(f, step=0.25, method='central', order=2)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x= x_values, y= derf(x_values), mode='lines', name='Derivada', line=dict(color='red', width=3)))
+fig.add_trace(go.Scatter(x= x_values, y= df_01(x_values), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= df_025(x_values), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+
+fig.add_trace(go.Scatter(x= x_values, y= derivative(f, x_values).df, mode='lines', name='SciPy', line=dict(color='aqua', width=2)))
+
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de aproximación de las derivadas",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+```
+
+#GRafica de error comparando
+
+```{python}
+#| code-fold: true
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatter(x= x_values, y= abs(derf(x_values)-df_025(x_values)), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= abs(derf(x_values)-df_01(x_values)), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+
+fig.add_trace(go.Scatter(x= x_values, y= abs(derf(x_values)-derivative(f, x_values).df), mode='lines', name='SciPy', line=dict(color='aqua', width=2)))
+
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de errores",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+```
+
+#Instruccion c) 2da. derivada, cambiamos la dery pegamos del ejer 1
+
+```{python}
+#| code-fold: true
+
+
+dderf = lambda x: -1/(x+2)**2-2  #se modifica
+
+a = 0 
+b= 5 #se modifica
+
+ddf_01 = nd.Derivative(f, step=0.1, method='central', order=2, n = 2) #el valor de n igual a 2 es la segunda derivada para poder compararla
+ddf_025 = nd.Derivative(f, step=0.25, method='central', order=2, n = 2)
+fig = go.Figure()
+
+x_values = np.linspace(a, b, 500)
+
+fig.add_trace(go.Scatter(x= x_values, y= ddf_025(x_values), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= ddf_01(x_values), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= dderf(x_values), mode='lines', name='2da. derivada', line=dict(color='goldenrod', width=1)))
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de aproximación de la 2da derivada",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+
+```
+
+#Errores de la 2da derivada.
+
+```{python}
+#| code-fold: true
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatter(x= x_values, y= abs(dderf(x_values)-ddf_025(x_values)), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= abs(dderf(x_values)-ddf_01(x_values)), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de errores 2da. derivada",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+```
+
+c)  $f(x)=\sqrt{x} sen(x^2)$, $x\in [0,\pi]$
+
+```{python}
+#Realizamos la grafica del ejemplo 9 
+#| code-fold: true
+#| fig-align: 'center'
+
+f= lambda x: np.sqrt(x)*np.sin(x**2)  #modificar para cada funcion  
+derf = lambda x: 1/(2*np.sqrt(x))*np.sin(x**2)+np.sqrt(x)*2*x*np.cos(x**2) #primero corremos chunk agregando al inicio #, despues de observar la grafica quitamos #, la derivada es una suma 
+
+x_values = np.linspace(0, np.pi, 500) #es el numero de puntos, se modifica 
+
+plt.figure(figsize=(8,6))
+plt.plot(x_values,  f(x_values))
+
+plt.grid()
+
+plt.show()
+```
+
+#Instruccion b)
+
+```{python}
+#| code-fold: true
+#| fig-align: 'center' #Se aproxima la derivada, no se modifica
+
+# Función de numdifftools #podemo cambiar los 0.1 y 0.25 ya que la derivada esta en el punto de 0 a 2 
+df_01 = nd.Derivative(f, step=0.1, method='central', order=2)
+df_025 = nd.Derivative(f, step=0.25, method='central', order=2)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x= x_values, y= derf(x_values), mode='lines', name='Derivada', line=dict(color='red', width=3)))
+fig.add_trace(go.Scatter(x= x_values, y= df_01(x_values), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= df_025(x_values), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+
+fig.add_trace(go.Scatter(x= x_values, y= derivative(f, x_values).df, mode='lines', name='SciPy', line=dict(color='aqua', width=2)))
+
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de aproximación de las derivadas",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+```
+
+#GRafica de error comparando ...
+
+```{python}
+#| code-fold: true
+#| message: false
+#| warning: false
+fig = go.Figure()
+
+fig.add_trace(go.Scatter(x= x_values, y= abs(derf(x_values)-df_025(x_values)), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= abs(derf(x_values)-df_01(x_values)), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+
+fig.add_trace(go.Scatter(x= x_values, y= abs(derf(x_values)-derivative(f, x_values).df), mode='lines', name='SciPy', line=dict(color='aqua', width=2)))
+
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de errores",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+```
+
+#Instruccion c) 2da. derivada, cambiamos la dery pegamos del ejer 1
+
+```{python}
+#| code-fold: true
+
+
+#dderf = lambda x:    #se modifica
+
+a = 0 
+b= np.pi #se modifica
+
+ddf_01 = nd.Derivative(f, step=0.1, method='central', order=2, n = 2) #el valor de n igual a 2 es la segunda derivada para poder compararla
+ddf_025 = nd.Derivative(f, step=0.25, method='central', order=2, n = 2)
+fig = go.Figure()
+
+x_values = np.linspace(a, b, 500)
+
+fig.add_trace(go.Scatter(x= x_values, y= ddf_025(x_values), mode='lines', name='h=0.25', line=dict(color='royalblue', width=1)))
+fig.add_trace(go.Scatter(x= x_values, y= ddf_01(x_values), mode='lines', name='h=0.1', line=dict(color='teal', width=1)))
+#fig.add_trace(go.Scatter(x= x_values, y= dderf(x_values), mode='lines', name='2da. derivada', line=dict(color='goldenrod', width=1)))
+
+# Configurar diseño de la gráfica
+fig.update_layout(
+    title="Gráfica de aproximación de la 2da derivada",
+    xaxis_title="x",
+    yaxis_title="y",
+    template="plotly_white",
+    width = 768,
+    height = 576
+)
+
+fig.show()
+
+```
+
+#Errores de la 2da derivada.
+
+d)  $f(x)=(cos\,3x)^2-e^{2x}$, $x\in [0,\pi/2]$
+
+# Ejericicio 2
+
+Aproximar las siguientes integrales, cada caso hacer una gráfica de la función e indicar el área bajo la curva.
+
+a)  
+
+\begin{equation}
+\int_0^1 e^{-x^2}\,dx
+\end{equation}
+
+```{python}
+#| code-fold: true
+#| fig-align: 'center'
+
+f= lambda x: np.exp(-x**2)
+a = 0
+b = 1 #son los limites de la integral (0-1)
+
+
+x_values = np.linspace(a, b, 100)
+
+
+plt.figure(figsize=(8,6))
+plt.plot(x_values,f(x_values), label="Función")
+plt.fill_between(np.linspace(a,b, 100), y1=0, y2=f(np.linspace(a,b, 100)), color="pink", alpha=0.5)
+plt.grid()
+plt.axis("square")
+plt.legend()
+plt.show()
+
+  
+```
+
+#por que la de simsonp no, por que se tiene un la integral de la forma \int\_a\^\b f(x),dx Cuando no se solicite algún método en específico y se cuente con la función usaremos la función `integrate.quad` de SciPy. La cual brinda el valor aproximado de la integral y una estimación del error absoluto. #Calcular la integral con la sig funcion.
+
+```{python}
+integral = integrate.quad(f, a, b)
+print(integral)
+#nos da = el valor de la integral y la otra la aprox del error.
+```
+
+b)  
+
+\begin{equation}
+\int_0^\pi sen(x^2)\,dx
+\end{equation}
+
+c)  
+
+\begin{equation}
+\int_0^\pi \frac{sen(x)}{x}\,dx
+\end{equation}
+
+d)  
+
+\begin{equation}
+\int_0^\infty e^{-x^2} cos(x) \,dx
+\end{equation}
+
+```{python}
+#| code-fold: true
+#| fig-align: 'center'
+
+f= lambda x: np.sqrt(1-x**2) #se modifica
+a = 0
+b = 1 #son los limites de la integral (0-1)
+
+
+x_values = np.linspace(a, b, 100)
+
+
+plt.figure(figsize=(8,6))
+plt.plot(x_values,f(x_values), label="Función")
+plt.fill_between(np.linspace(a,b, 100), y1=0, y2=f(np.linspace(a,b, 100)), color="pink", alpha=0.5)
+plt.grid()
+plt.axis("square")
+plt.legend()
+plt.show()
+
+#El area sobre la curva es de la mitad de una circunferncia.
+  
+```
+
+#primero definir 1 cuadrado, elegir tantos puntos, preguntar cuales caen dentro y cuales fuera para aproximar el valor de pi/4
+
+```{python}
+#| code-fold: true
+#| fig-align: 'center'
+
+N =10000
+
+x = np.random.uniform(o, 1, N)
+y = np.random.uniform(0, 1, N)
+f= lambda x: np.sqrt(1-x**2) #se modifica
+
+
+a = 0
+b = 1 #son los limites de la integral (0-1)
+
+
+x_values = np.linspace(a, b, 100)
+
+
+plt.figure(figsize=(8,6))
+plt.plot(x_values,f(x_values), label="Función")
+plt.plot(x)
+#plt.fill_between(np.linspace(a,b, 100), y1=0, y2=f(np.linspace(a,b, 100)), color="pink", alpha=0.5)
+#plt.grid()
+#plt.axis("square")
+#plt.legend()
+#plt.show()
+
+#El area sobre la curva es de la mitad de una circunferncia.
+  
+```
+
+#por que la de simsonp no, por que se tiene un la integral de la forma \int\_a\^\b f(x),dx Cuando no se solicite algún método en específico y se cuente con la función usaremos la función `integrate.quad` de SciPy. La cual brinda el valor aproximado de la integral y una estimación del error absoluto. #Calcular la integral con la sig funcion.
+
+```{python}
+integral = integrate.quad(f, a, b)
+print(integral)
+#nos da = el valor de la integral y la otra la aprox del error.
+```
+
+e)  
+
+\begin{equation}
+\int_0^1 x^x \,dx
+\end{equation}
+
+f)  
+
+\begin{equation}
+\int_1^5 e^{-x^2} x^3 dx
+\end{equation}
+
+g)  
+
+\begin{equation}
+\int_0^1 \sqrt{1-x^2} dx
+\end{equation}
+
+h)  
+
+\begin{equation}
+\int_0^\infty \frac{x}{e^x-1} dx
+\end{equation}
+
+i)  
+
+\begin{equation}
+\int_0^1 \frac{1}{\sqrt{x^4+1}} dx
+\end{equation}
+
+# Ejercicio 3
+
+Aproximar las siguientes integrales dobles y triples, llevar a cabo la gráfica cuando se indique y comparar con el valor *exacto* de la integral.
+
+a)  Realizar gráfica
+
+\begin{equation}
+\int_{-1}^{1}\int_1^2 (3y^2-x^2+5) dx dy
+\end{equation}
+
+b)  
+
+\begin{equation}
+\int_{0}^{6}\int_1^5 \sqrt{x+4y} dx dy
+\end{equation}
+
+c)  
+
+\begin{equation}
+\int_{1}^{e}\int_0^{log(x)} x^3 dx dy
+\end{equation}
+
+d)  
+
+\begin{equation}
+\int\int_D 30ye^x dx dy
+\end{equation}
+
+Donde $D\subset \mathbb{R}^2$ es la región en la siguiente gráfica.
+
+```{python}
+#| code-fold: true
+#| fig-align: 'center'
+
+
+
+
+x_val = np.array([0,4])
+y_val1 = np.array([0, 1])
+y_val2 = np.array([0, 4])
+
+plt.figure(figsize=(8,6))
+plt.plot(x_val, y_val1)
+plt.plot(x_val, y_val2)
+plt.fill_between(x_val, y1=y_val1, y2=y_val2, color="firebrick", alpha=0.5)
+plt.grid()
+plt.show()
+
+  
+```
+
+e)  
+
+\begin{equation}
+\int\int \int_B z e^{x+y} dx\, dy\, dz, \, B=[0,1] \times [0,1] \times [0,1]
+\end{equation}
+
+f)  
+
+\begin{equation}
+\int_0^1 \int_0^x \int_0^y (y+xz) dz\, dy\, dx
+\end{equation}
+
+# Ejercicio 4
+
+De [scipy.stats](@https://docs.scipy.org/doc/scipy/reference/stats.html) elige alguna distribución de probabilidad continua, realiza la gráfica y encuentra la probabilidad que la variable aleatoria tome un valor en un intervalo dado. Compara el resultado con el método `cdf`.
